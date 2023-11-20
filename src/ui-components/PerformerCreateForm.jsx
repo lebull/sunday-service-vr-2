@@ -6,176 +6,10 @@
 
 /* eslint-disable */
 import * as React from "react";
-import {
-  Badge,
-  Button,
-  Divider,
-  Flex,
-  Grid,
-  Icon,
-  ScrollView,
-  Text,
-  TextField,
-  useTheme,
-} from "@aws-amplify/ui-react";
+import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
 import { Performer } from "../models";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { DataStore } from "aws-amplify/datastore";
-function ArrayField({
-  items = [],
-  onChange,
-  label,
-  inputFieldRef,
-  children,
-  hasError,
-  setFieldValue,
-  currentFieldValue,
-  defaultFieldValue,
-  lengthLimit,
-  getBadgeText,
-  runValidationTasks,
-  errorMessage,
-}) {
-  const labelElement = <Text>{label}</Text>;
-  const {
-    tokens: {
-      components: {
-        fieldmessages: { error: errorStyles },
-      },
-    },
-  } = useTheme();
-  const [selectedBadgeIndex, setSelectedBadgeIndex] = React.useState();
-  const [isEditing, setIsEditing] = React.useState();
-  React.useEffect(() => {
-    if (isEditing) {
-      inputFieldRef?.current?.focus();
-    }
-  }, [isEditing]);
-  const removeItem = async (removeIndex) => {
-    const newItems = items.filter((value, index) => index !== removeIndex);
-    await onChange(newItems);
-    setSelectedBadgeIndex(undefined);
-  };
-  const addItem = async () => {
-    const { hasError } = runValidationTasks();
-    if (
-      currentFieldValue !== undefined &&
-      currentFieldValue !== null &&
-      currentFieldValue !== "" &&
-      !hasError
-    ) {
-      const newItems = [...items];
-      if (selectedBadgeIndex !== undefined) {
-        newItems[selectedBadgeIndex] = currentFieldValue;
-        setSelectedBadgeIndex(undefined);
-      } else {
-        newItems.push(currentFieldValue);
-      }
-      await onChange(newItems);
-      setIsEditing(false);
-    }
-  };
-  const arraySection = (
-    <React.Fragment>
-      {!!items?.length && (
-        <ScrollView height="inherit" width="inherit" maxHeight={"7rem"}>
-          {items.map((value, index) => {
-            return (
-              <Badge
-                key={index}
-                style={{
-                  cursor: "pointer",
-                  alignItems: "center",
-                  marginRight: 3,
-                  marginTop: 3,
-                  backgroundColor:
-                    index === selectedBadgeIndex ? "#B8CEF9" : "",
-                }}
-                onClick={() => {
-                  setSelectedBadgeIndex(index);
-                  setFieldValue(items[index]);
-                  setIsEditing(true);
-                }}
-              >
-                {getBadgeText ? getBadgeText(value) : value.toString()}
-                <Icon
-                  style={{
-                    cursor: "pointer",
-                    paddingLeft: 3,
-                    width: 20,
-                    height: 20,
-                  }}
-                  viewBox={{ width: 20, height: 20 }}
-                  paths={[
-                    {
-                      d: "M10 10l5.09-5.09L10 10l5.09 5.09L10 10zm0 0L4.91 4.91 10 10l-5.09 5.09L10 10z",
-                      stroke: "black",
-                    },
-                  ]}
-                  ariaLabel="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    removeItem(index);
-                  }}
-                />
-              </Badge>
-            );
-          })}
-        </ScrollView>
-      )}
-      <Divider orientation="horizontal" marginTop={5} />
-    </React.Fragment>
-  );
-  if (lengthLimit !== undefined && items.length >= lengthLimit && !isEditing) {
-    return (
-      <React.Fragment>
-        {labelElement}
-        {arraySection}
-      </React.Fragment>
-    );
-  }
-  return (
-    <React.Fragment>
-      {labelElement}
-      {isEditing && children}
-      {!isEditing ? (
-        <>
-          <Button
-            onClick={() => {
-              setIsEditing(true);
-            }}
-          >
-            Add item
-          </Button>
-          {errorMessage && hasError && (
-            <Text color={errorStyles.color} fontSize={errorStyles.fontSize}>
-              {errorMessage}
-            </Text>
-          )}
-        </>
-      ) : (
-        <Flex justifyContent="flex-end">
-          {(currentFieldValue || isEditing) && (
-            <Button
-              children="Cancel"
-              type="button"
-              size="small"
-              onClick={() => {
-                setFieldValue(defaultFieldValue);
-                setIsEditing(false);
-                setSelectedBadgeIndex(undefined);
-              }}
-            ></Button>
-          )}
-          <Button size="small" variation="link" onClick={addItem}>
-            {selectedBadgeIndex !== undefined ? "Save" : "Add"}
-          </Button>
-        </Flex>
-      )}
-      {arraySection}
-    </React.Fragment>
-  );
-}
 export default function PerformerCreateForm(props) {
   const {
     clearOnSuccess = true,
@@ -188,35 +22,20 @@ export default function PerformerCreateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    djName: "",
-    furName: "",
-    performerDescribedGenres: [],
-    discordId: "",
+    dj_name: "",
+    fur_name: "",
   };
-  const [djName, setDjName] = React.useState(initialValues.djName);
-  const [furName, setFurName] = React.useState(initialValues.furName);
-  const [performerDescribedGenres, setPerformerDescribedGenres] =
-    React.useState(initialValues.performerDescribedGenres);
-  const [discordId, setDiscordId] = React.useState(initialValues.discordId);
+  const [dj_name, setDj_name] = React.useState(initialValues.dj_name);
+  const [fur_name, setFur_name] = React.useState(initialValues.fur_name);
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    setDjName(initialValues.djName);
-    setFurName(initialValues.furName);
-    setPerformerDescribedGenres(initialValues.performerDescribedGenres);
-    setCurrentPerformerDescribedGenresValue("");
-    setDiscordId(initialValues.discordId);
+    setDj_name(initialValues.dj_name);
+    setFur_name(initialValues.fur_name);
     setErrors({});
   };
-  const [
-    currentPerformerDescribedGenresValue,
-    setCurrentPerformerDescribedGenresValue,
-  ] = React.useState("");
-  const performerDescribedGenresRef = React.createRef();
   const validations = {
-    djName: [],
-    furName: [],
-    performerDescribedGenres: [],
-    discordId: [],
+    dj_name: [],
+    fur_name: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -244,10 +63,8 @@ export default function PerformerCreateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          djName,
-          furName,
-          performerDescribedGenres,
-          discordId,
+          dj_name,
+          fur_name,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -294,142 +111,54 @@ export default function PerformerCreateForm(props) {
       {...rest}
     >
       <TextField
-        label="Dj Name"
+        label="Dj name"
         isRequired={false}
         isReadOnly={false}
-        value={djName}
+        value={dj_name}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              djName: value,
-              furName,
-              performerDescribedGenres,
-              discordId,
+              dj_name: value,
+              fur_name,
             };
             const result = onChange(modelFields);
-            value = result?.djName ?? value;
+            value = result?.dj_name ?? value;
           }
-          if (errors.djName?.hasError) {
-            runValidationTasks("djName", value);
+          if (errors.dj_name?.hasError) {
+            runValidationTasks("dj_name", value);
           }
-          setDjName(value);
+          setDj_name(value);
         }}
-        onBlur={() => runValidationTasks("djName", djName)}
-        errorMessage={errors.djName?.errorMessage}
-        hasError={errors.djName?.hasError}
-        {...getOverrideProps(overrides, "djName")}
+        onBlur={() => runValidationTasks("dj_name", dj_name)}
+        errorMessage={errors.dj_name?.errorMessage}
+        hasError={errors.dj_name?.hasError}
+        {...getOverrideProps(overrides, "dj_name")}
       ></TextField>
       <TextField
-        label="Furry Name"
-        descriptiveText="(If Different)"
+        label="Fur name"
         isRequired={false}
         isReadOnly={false}
-        value={furName}
+        value={fur_name}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              djName,
-              furName: value,
-              performerDescribedGenres,
-              discordId,
+              dj_name,
+              fur_name: value,
             };
             const result = onChange(modelFields);
-            value = result?.furName ?? value;
+            value = result?.fur_name ?? value;
           }
-          if (errors.furName?.hasError) {
-            runValidationTasks("furName", value);
+          if (errors.fur_name?.hasError) {
+            runValidationTasks("fur_name", value);
           }
-          setFurName(value);
+          setFur_name(value);
         }}
-        onBlur={() => runValidationTasks("furName", furName)}
-        errorMessage={errors.furName?.errorMessage}
-        hasError={errors.furName?.hasError}
-        {...getOverrideProps(overrides, "furName")}
-      ></TextField>
-      <ArrayField
-        onChange={async (items) => {
-          let values = items;
-          if (onChange) {
-            const modelFields = {
-              djName,
-              furName,
-              performerDescribedGenres: values,
-              discordId,
-            };
-            const result = onChange(modelFields);
-            values = result?.performerDescribedGenres ?? values;
-          }
-          setPerformerDescribedGenres(values);
-          setCurrentPerformerDescribedGenresValue("");
-        }}
-        currentFieldValue={currentPerformerDescribedGenresValue}
-        label={"Genres"}
-        items={performerDescribedGenres}
-        hasError={errors?.performerDescribedGenres?.hasError}
-        runValidationTasks={async () =>
-          await runValidationTasks(
-            "performerDescribedGenres",
-            currentPerformerDescribedGenresValue
-          )
-        }
-        errorMessage={errors?.performerDescribedGenres?.errorMessage}
-        setFieldValue={setCurrentPerformerDescribedGenresValue}
-        inputFieldRef={performerDescribedGenresRef}
-        defaultFieldValue={""}
-      >
-        <TextField
-          label="Genres"
-          isRequired={false}
-          isReadOnly={false}
-          value={currentPerformerDescribedGenresValue}
-          onChange={(e) => {
-            let { value } = e.target;
-            if (errors.performerDescribedGenres?.hasError) {
-              runValidationTasks("performerDescribedGenres", value);
-            }
-            setCurrentPerformerDescribedGenresValue(value);
-          }}
-          onBlur={() =>
-            runValidationTasks(
-              "performerDescribedGenres",
-              currentPerformerDescribedGenresValue
-            )
-          }
-          errorMessage={errors.performerDescribedGenres?.errorMessage}
-          hasError={errors.performerDescribedGenres?.hasError}
-          ref={performerDescribedGenresRef}
-          labelHidden={true}
-          {...getOverrideProps(overrides, "performerDescribedGenres")}
-        ></TextField>
-      </ArrayField>
-      <TextField
-        label="Discord Name"
-        isRequired={false}
-        isReadOnly={false}
-        value={discordId}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              djName,
-              furName,
-              performerDescribedGenres,
-              discordId: value,
-            };
-            const result = onChange(modelFields);
-            value = result?.discordId ?? value;
-          }
-          if (errors.discordId?.hasError) {
-            runValidationTasks("discordId", value);
-          }
-          setDiscordId(value);
-        }}
-        onBlur={() => runValidationTasks("discordId", discordId)}
-        errorMessage={errors.discordId?.errorMessage}
-        hasError={errors.discordId?.hasError}
-        {...getOverrideProps(overrides, "discordId")}
+        onBlur={() => runValidationTasks("fur_name", fur_name)}
+        errorMessage={errors.fur_name?.errorMessage}
+        hasError={errors.fur_name?.hasError}
+        {...getOverrideProps(overrides, "fur_name")}
       ></TextField>
       <Flex
         justifyContent="space-between"

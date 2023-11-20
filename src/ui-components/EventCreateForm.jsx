@@ -6,14 +6,7 @@
 
 /* eslint-disable */
 import * as React from "react";
-import {
-  Button,
-  Flex,
-  Grid,
-  Heading,
-  TextAreaField,
-  TextField,
-} from "@aws-amplify/ui-react";
+import { Button, Flex, Grid, Heading, TextField } from "@aws-amplify/ui-react";
 import { Event } from "../models";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { DataStore } from "aws-amplify/datastore";
@@ -29,26 +22,18 @@ export default function EventCreateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    startTime: "",
-    name: "",
-    description: "",
+    start_datetime: "",
   };
-  const [startTime, setStartTime] = React.useState(initialValues.startTime);
-  const [name, setName] = React.useState(initialValues.name);
-  const [description, setDescription] = React.useState(
-    initialValues.description
+  const [start_datetime, setStart_datetime] = React.useState(
+    initialValues.start_datetime
   );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    setStartTime(initialValues.startTime);
-    setName(initialValues.name);
-    setDescription(initialValues.description);
+    setStart_datetime(initialValues.start_datetime);
     setErrors({});
   };
   const validations = {
-    startTime: [],
-    name: [],
-    description: [],
+    start_datetime: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -93,9 +78,7 @@ export default function EventCreateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          startTime,
-          name,
-          description,
+          start_datetime,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -146,84 +129,31 @@ export default function EventCreateForm(props) {
         {...getOverrideProps(overrides, "SectionalElement0")}
       ></Heading>
       <TextField
-        label="Event Start"
+        label="Start datetime"
         isRequired={false}
         isReadOnly={false}
         type="datetime-local"
-        value={startTime && convertToLocal(new Date(startTime))}
+        value={start_datetime && convertToLocal(new Date(start_datetime))}
         onChange={(e) => {
           let value =
             e.target.value === "" ? "" : new Date(e.target.value).toISOString();
           if (onChange) {
             const modelFields = {
-              startTime: value,
-              name,
-              description,
+              start_datetime: value,
             };
             const result = onChange(modelFields);
-            value = result?.startTime ?? value;
+            value = result?.start_datetime ?? value;
           }
-          if (errors.startTime?.hasError) {
-            runValidationTasks("startTime", value);
+          if (errors.start_datetime?.hasError) {
+            runValidationTasks("start_datetime", value);
           }
-          setStartTime(value);
+          setStart_datetime(value);
         }}
-        onBlur={() => runValidationTasks("startTime", startTime)}
-        errorMessage={errors.startTime?.errorMessage}
-        hasError={errors.startTime?.hasError}
-        {...getOverrideProps(overrides, "startTime")}
+        onBlur={() => runValidationTasks("start_datetime", start_datetime)}
+        errorMessage={errors.start_datetime?.errorMessage}
+        hasError={errors.start_datetime?.hasError}
+        {...getOverrideProps(overrides, "start_datetime")}
       ></TextField>
-      <TextField
-        label="Event Name"
-        isRequired={false}
-        isReadOnly={false}
-        value={name}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              startTime,
-              name: value,
-              description,
-            };
-            const result = onChange(modelFields);
-            value = result?.name ?? value;
-          }
-          if (errors.name?.hasError) {
-            runValidationTasks("name", value);
-          }
-          setName(value);
-        }}
-        onBlur={() => runValidationTasks("name", name)}
-        errorMessage={errors.name?.errorMessage}
-        hasError={errors.name?.hasError}
-        {...getOverrideProps(overrides, "name")}
-      ></TextField>
-      <TextAreaField
-        label="Description"
-        isRequired={false}
-        isReadOnly={false}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              startTime,
-              name,
-              description: value,
-            };
-            const result = onChange(modelFields);
-            value = result?.description ?? value;
-          }
-          if (errors.description?.hasError) {
-            runValidationTasks("description", value);
-          }
-          setDescription(value);
-        }}
-        onBlur={() => runValidationTasks("description", description)}
-        errorMessage={errors.description?.errorMessage}
-        hasError={errors.description?.hasError}
-        {...getOverrideProps(overrides, "description")}
-      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

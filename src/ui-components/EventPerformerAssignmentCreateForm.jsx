@@ -6,14 +6,19 @@
 
 /* eslint-disable */
 import * as React from "react";
-import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
-import { Performer } from "../models";
+import {
+  Button,
+  Flex,
+  Grid,
+  SelectField,
+  TextField,
+} from "@aws-amplify/ui-react";
+import { EventPerformerAssignment } from "../models";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { DataStore } from "aws-amplify/datastore";
-export default function PerformerUpdateForm(props) {
+export default function EventPerformerAssignmentCreateForm(props) {
   const {
-    id: idProp,
-    performer: performerModelProp,
+    clearOnSuccess = true,
     onSuccess,
     onError,
     onSubmit,
@@ -23,35 +28,22 @@ export default function PerformerUpdateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    dj_name: "",
-    fur_name: "",
+    slot_index: "",
+    slot_length: "",
   };
-  const [dj_name, setDj_name] = React.useState(initialValues.dj_name);
-  const [fur_name, setFur_name] = React.useState(initialValues.fur_name);
+  const [slot_index, setSlot_index] = React.useState(initialValues.slot_index);
+  const [slot_length, setSlot_length] = React.useState(
+    initialValues.slot_length
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    const cleanValues = performerRecord
-      ? { ...initialValues, ...performerRecord }
-      : initialValues;
-    setDj_name(cleanValues.dj_name);
-    setFur_name(cleanValues.fur_name);
+    setSlot_index(initialValues.slot_index);
+    setSlot_length(initialValues.slot_length);
     setErrors({});
   };
-  const [performerRecord, setPerformerRecord] =
-    React.useState(performerModelProp);
-  React.useEffect(() => {
-    const queryData = async () => {
-      const record = idProp
-        ? await DataStore.query(Performer, idProp)
-        : performerModelProp;
-      setPerformerRecord(record);
-    };
-    queryData();
-  }, [idProp, performerModelProp]);
-  React.useEffect(resetStateValues, [performerRecord]);
   const validations = {
-    dj_name: [],
-    fur_name: [],
+    slot_index: [],
+    slot_length: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -79,8 +71,8 @@ export default function PerformerUpdateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          dj_name,
-          fur_name,
+          slot_index,
+          slot_length,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -110,13 +102,12 @@ export default function PerformerUpdateForm(props) {
               modelFields[key] = null;
             }
           });
-          await DataStore.save(
-            Performer.copyOf(performerRecord, (updated) => {
-              Object.assign(updated, modelFields);
-            })
-          );
+          await DataStore.save(new EventPerformerAssignment(modelFields));
           if (onSuccess) {
             onSuccess(modelFields);
+          }
+          if (clearOnSuccess) {
+            resetStateValues();
           }
         } catch (err) {
           if (onError) {
@@ -124,72 +115,86 @@ export default function PerformerUpdateForm(props) {
           }
         }
       }}
-      {...getOverrideProps(overrides, "PerformerUpdateForm")}
+      {...getOverrideProps(overrides, "EventPerformerAssignmentCreateForm")}
       {...rest}
     >
       <TextField
-        label="Dj name"
+        label="Slot index"
         isRequired={false}
         isReadOnly={false}
-        value={dj_name}
+        type="number"
+        step="any"
+        value={slot_index}
+        onChange={(e) => {
+          let value = isNaN(parseInt(e.target.value))
+            ? e.target.value
+            : parseInt(e.target.value);
+          if (onChange) {
+            const modelFields = {
+              slot_index: value,
+              slot_length,
+            };
+            const result = onChange(modelFields);
+            value = result?.slot_index ?? value;
+          }
+          if (errors.slot_index?.hasError) {
+            runValidationTasks("slot_index", value);
+          }
+          setSlot_index(value);
+        }}
+        onBlur={() => runValidationTasks("slot_index", slot_index)}
+        errorMessage={errors.slot_index?.errorMessage}
+        hasError={errors.slot_index?.hasError}
+        {...getOverrideProps(overrides, "slot_index")}
+      ></TextField>
+      <SelectField
+        label="Slot length"
+        placeholder="Please select an option"
+        isDisabled={false}
+        value={slot_length}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              dj_name: value,
-              fur_name,
+              slot_index,
+              slot_length: value,
             };
             const result = onChange(modelFields);
-            value = result?.dj_name ?? value;
+            value = result?.slot_length ?? value;
           }
-          if (errors.dj_name?.hasError) {
-            runValidationTasks("dj_name", value);
+          if (errors.slot_length?.hasError) {
+            runValidationTasks("slot_length", value);
           }
-          setDj_name(value);
+          setSlot_length(value);
         }}
-        onBlur={() => runValidationTasks("dj_name", dj_name)}
-        errorMessage={errors.dj_name?.errorMessage}
-        hasError={errors.dj_name?.hasError}
-        {...getOverrideProps(overrides, "dj_name")}
-      ></TextField>
-      <TextField
-        label="Fur name"
-        isRequired={false}
-        isReadOnly={false}
-        value={fur_name}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              dj_name,
-              fur_name: value,
-            };
-            const result = onChange(modelFields);
-            value = result?.fur_name ?? value;
-          }
-          if (errors.fur_name?.hasError) {
-            runValidationTasks("fur_name", value);
-          }
-          setFur_name(value);
-        }}
-        onBlur={() => runValidationTasks("fur_name", fur_name)}
-        errorMessage={errors.fur_name?.errorMessage}
-        hasError={errors.fur_name?.hasError}
-        {...getOverrideProps(overrides, "fur_name")}
-      ></TextField>
+        onBlur={() => runValidationTasks("slot_length", slot_length)}
+        errorMessage={errors.slot_length?.errorMessage}
+        hasError={errors.slot_length?.hasError}
+        {...getOverrideProps(overrides, "slot_length")}
+      >
+        <option
+          children="Thirty"
+          value="THIRTY"
+          {...getOverrideProps(overrides, "slot_lengthoption0")}
+        ></option>
+        <option
+          children="Sixty"
+          value="SIXTY"
+          {...getOverrideProps(overrides, "slot_lengthoption1")}
+        ></option>
+      </SelectField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}
       >
         <Button
-          children="Reset"
+          children="Clear"
           type="reset"
           onClick={(event) => {
             event.preventDefault();
             resetStateValues();
           }}
-          isDisabled={!(idProp || performerModelProp)}
-          {...getOverrideProps(overrides, "ResetButton")}
+          {...getOverrideProps(overrides, "ClearButton")}
         ></Button>
         <Flex
           gap="15px"
@@ -199,10 +204,7 @@ export default function PerformerUpdateForm(props) {
             children="Submit"
             type="submit"
             variation="primary"
-            isDisabled={
-              !(idProp || performerModelProp) ||
-              Object.values(errors).some((e) => e?.hasError)
-            }
+            isDisabled={Object.values(errors).some((e) => e?.hasError)}
             {...getOverrideProps(overrides, "SubmitButton")}
           ></Button>
         </Flex>

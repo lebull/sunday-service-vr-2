@@ -7,13 +7,12 @@
 /* eslint-disable */
 import * as React from "react";
 import { Button, Flex, Grid, TextField } from "@aws-amplify/ui-react";
-import { Performer } from "../models";
+import { Event } from "../models";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { DataStore } from "aws-amplify/datastore";
-export default function PerformerUpdateForm(props) {
+export default function CreateEvent(props) {
   const {
-    id: idProp,
-    performer: performerModelProp,
+    clearOnSuccess = true,
     onSuccess,
     onError,
     onSubmit,
@@ -23,35 +22,18 @@ export default function PerformerUpdateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    dj_name: "",
-    fur_name: "",
+    start_datetime: "",
   };
-  const [dj_name, setDj_name] = React.useState(initialValues.dj_name);
-  const [fur_name, setFur_name] = React.useState(initialValues.fur_name);
+  const [start_datetime, setStart_datetime] = React.useState(
+    initialValues.start_datetime
+  );
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    const cleanValues = performerRecord
-      ? { ...initialValues, ...performerRecord }
-      : initialValues;
-    setDj_name(cleanValues.dj_name);
-    setFur_name(cleanValues.fur_name);
+    setStart_datetime(initialValues.start_datetime);
     setErrors({});
   };
-  const [performerRecord, setPerformerRecord] =
-    React.useState(performerModelProp);
-  React.useEffect(() => {
-    const queryData = async () => {
-      const record = idProp
-        ? await DataStore.query(Performer, idProp)
-        : performerModelProp;
-      setPerformerRecord(record);
-    };
-    queryData();
-  }, [idProp, performerModelProp]);
-  React.useEffect(resetStateValues, [performerRecord]);
   const validations = {
-    dj_name: [],
-    fur_name: [],
+    start_datetime: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -70,6 +52,23 @@ export default function PerformerUpdateForm(props) {
     setErrors((errors) => ({ ...errors, [fieldName]: validationResponse }));
     return validationResponse;
   };
+  const convertToLocal = (date) => {
+    const df = new Intl.DateTimeFormat("default", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      calendar: "iso8601",
+      numberingSystem: "latn",
+      hourCycle: "h23",
+    });
+    const parts = df.formatToParts(date).reduce((acc, part) => {
+      acc[part.type] = part.value;
+      return acc;
+    }, {});
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  };
   return (
     <Grid
       as="form"
@@ -79,8 +78,7 @@ export default function PerformerUpdateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          dj_name,
-          fur_name,
+          start_datetime,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -110,13 +108,12 @@ export default function PerformerUpdateForm(props) {
               modelFields[key] = null;
             }
           });
-          await DataStore.save(
-            Performer.copyOf(performerRecord, (updated) => {
-              Object.assign(updated, modelFields);
-            })
-          );
+          await DataStore.save(new Event(modelFields));
           if (onSuccess) {
             onSuccess(modelFields);
+          }
+          if (clearOnSuccess) {
+            resetStateValues();
           }
         } catch (err) {
           if (onError) {
@@ -124,72 +121,47 @@ export default function PerformerUpdateForm(props) {
           }
         }
       }}
-      {...getOverrideProps(overrides, "PerformerUpdateForm")}
+      {...getOverrideProps(overrides, "CreateEvent")}
       {...rest}
     >
       <TextField
-        label="Dj name"
+        label="Start datetime"
         isRequired={false}
         isReadOnly={false}
-        value={dj_name}
+        type="datetime-local"
+        value={start_datetime && convertToLocal(new Date(start_datetime))}
         onChange={(e) => {
-          let { value } = e.target;
+          let value =
+            e.target.value === "" ? "" : new Date(e.target.value).toISOString();
           if (onChange) {
             const modelFields = {
-              dj_name: value,
-              fur_name,
+              start_datetime: value,
             };
             const result = onChange(modelFields);
-            value = result?.dj_name ?? value;
+            value = result?.start_datetime ?? value;
           }
-          if (errors.dj_name?.hasError) {
-            runValidationTasks("dj_name", value);
+          if (errors.start_datetime?.hasError) {
+            runValidationTasks("start_datetime", value);
           }
-          setDj_name(value);
+          setStart_datetime(value);
         }}
-        onBlur={() => runValidationTasks("dj_name", dj_name)}
-        errorMessage={errors.dj_name?.errorMessage}
-        hasError={errors.dj_name?.hasError}
-        {...getOverrideProps(overrides, "dj_name")}
-      ></TextField>
-      <TextField
-        label="Fur name"
-        isRequired={false}
-        isReadOnly={false}
-        value={fur_name}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              dj_name,
-              fur_name: value,
-            };
-            const result = onChange(modelFields);
-            value = result?.fur_name ?? value;
-          }
-          if (errors.fur_name?.hasError) {
-            runValidationTasks("fur_name", value);
-          }
-          setFur_name(value);
-        }}
-        onBlur={() => runValidationTasks("fur_name", fur_name)}
-        errorMessage={errors.fur_name?.errorMessage}
-        hasError={errors.fur_name?.hasError}
-        {...getOverrideProps(overrides, "fur_name")}
+        onBlur={() => runValidationTasks("start_datetime", start_datetime)}
+        errorMessage={errors.start_datetime?.errorMessage}
+        hasError={errors.start_datetime?.hasError}
+        {...getOverrideProps(overrides, "start_datetime")}
       ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}
       >
         <Button
-          children="Reset"
+          children="Clear"
           type="reset"
           onClick={(event) => {
             event.preventDefault();
             resetStateValues();
           }}
-          isDisabled={!(idProp || performerModelProp)}
-          {...getOverrideProps(overrides, "ResetButton")}
+          {...getOverrideProps(overrides, "ClearButton")}
         ></Button>
         <Flex
           gap="15px"
@@ -199,10 +171,7 @@ export default function PerformerUpdateForm(props) {
             children="Submit"
             type="submit"
             variation="primary"
-            isDisabled={
-              !(idProp || performerModelProp) ||
-              Object.values(errors).some((e) => e?.hasError)
-            }
+            isDisabled={Object.values(errors).some((e) => e?.hasError)}
             {...getOverrideProps(overrides, "SubmitButton")}
           ></Button>
         </Flex>

@@ -23,24 +23,18 @@ export declare type ValidationResponse = {
 };
 export declare type ValidationFunction<T> = (value: T, validationResponse: ValidationResponse) => ValidationResponse | Promise<ValidationResponse>;
 export declare type PerformerUpdateFormInputValues = {
-    djName?: string;
-    furName?: string;
-    performerDescribedGenres?: string[];
-    discordId?: string;
+    dj_name?: string;
+    fur_name?: string;
 };
 export declare type PerformerUpdateFormValidationValues = {
-    djName?: ValidationFunction<string>;
-    furName?: ValidationFunction<string>;
-    performerDescribedGenres?: ValidationFunction<string>;
-    discordId?: ValidationFunction<string>;
+    dj_name?: ValidationFunction<string>;
+    fur_name?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type PerformerUpdateFormOverridesProps = {
     PerformerUpdateFormGrid?: PrimitiveOverrideProps<GridProps>;
-    djName?: PrimitiveOverrideProps<TextFieldProps>;
-    furName?: PrimitiveOverrideProps<TextFieldProps>;
-    performerDescribedGenres?: PrimitiveOverrideProps<TextFieldProps>;
-    discordId?: PrimitiveOverrideProps<TextFieldProps>;
+    dj_name?: PrimitiveOverrideProps<TextFieldProps>;
+    fur_name?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type PerformerUpdateFormProps = React.PropsWithChildren<{
     overrides?: PerformerUpdateFormOverridesProps | undefined | null;
